@@ -1,7 +1,8 @@
 import mariadb
+from dbcreds import user, password, host, port, database 
 
 def get_db_connection():
-    connection = mysql.connector.connect(user='root', password='password', host='localhost', database='blog')
+    connection = mariadb.connect(user=db_user, password=db_password, host=db_host, database=db_database)
     return connection
 
 def get_client(username, password):
