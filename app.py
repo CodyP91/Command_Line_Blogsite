@@ -1,52 +1,36 @@
 import mariadb
-from dbcreds import user, password, host, port, database 
+from dbcreds import user, password, host, database
 
-def get_db_connection():
-    connection = mariadb.connect(user=db_user, password=db_password, host=db_host, database=db_database)
-    return connection
-
-def get_client(username, password):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id FROM client WHERE username=%s AND password=%s", (username, password,))
+while True:
+    connection = mariadb.connect(user=user, password=password, host=host, database=database)
+    username = input('Enter your username: ')
+    password_input = input('Enter your password: ')
+    cursor = connection.cursor()
+    cursor.execute("SELECT id FROM client WHERE username=%s AND password=%s", (username, password_input,))
     user = cursor.fetchone()
-    return user[0] if user else None
+    client_id = user[0] if user else None
 
-def insert_post(client_id, title, content):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO post (client_id, title, content) VALUES (%s, %s, %s)", (client_id, title, content,))
-    conn.commit()
+    if client_id is None:
+        print('Invalid username or password')
+        connection.close()
+        break
 
-def get_all_posts():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT title, content FROM post")
-    posts = cursor.fetchall()
-    for post in posts:
-        print('Title: ', post[0])
-        print('Content: ', post[1])
+    print('1. Insert a new post')
+    print('2. Read all posts')
+    print('3. Quit')
+    choice = input('Select 1, 2 or 3: ')
 
-def main():
-    while True:
-        username = input('Enter your username: ')
-        password = input('Enter your password: ')
-        client_id = get_client(username, password)
-        if client_id is None:
-            print('Invalid username or password')
-            return
-        print('1. Insert a new post')
-        print('2. Read all posts')
-        print('3. Quit')
-        choice = input('Select 1, 2 or 3: ')
-        if choice == '1':
-            title = input('Enter title for the post: ')
-            content = input('Enter content for the post: ')
-            insert_post(client_id, title, content)
-        elif choice == '2':
-            get_all_posts()
-        elif choice == '3':
-            break
-
-if __name__ == "__main__":
-    main()
+    if choice == '1':
+        title = input('Enter title for the post: ')
+        content = input('Enter content for the post: ')
+        cursor.execute("INSERT INTO post (client_id, title, content) VALUES (%s, %s, %s)", (client_id, title, content,))
+        connection.commit()
+    elif choice == '2':
+        cursor.execute("SELECT title, content FROM post")
+        posts = cursor.fetchall()
+        for post in posts:
+            print('Title: ', post[0])
+            print('Content: ', post[1])
+    elif choice == '3':
+        connection.close()
+        break
